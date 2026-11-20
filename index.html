@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Holding Entry Trainer</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300..700&family=Chakra+Petch:ital,wght@0,500;0,600;1,500;1,600&display=swap">
+<style>
+:root{--bg:#dfe4ea;--panel:#fff;--edge:#b9c2cf;--txt:#10151b;--mut:#566273;--cy:#0a7ea8;--ok:#0b8a43;--ng:#c62828;
+--bezel:#1a1e24;--font:"Roboto Condensed","Arial Narrow","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#090b0e;--panel:#14181e;--edge:#2b323c;--txt:#eef2f6;--mut:#8e9aaa;--cy:#2fd6ff;--ok:#35e07f;--ng:#ff6b6f;--bezel:#14181e}}
+:root[data-theme="dark"]{--bg:#090b0e;--panel:#14181e;--edge:#2b323c;--txt:#eef2f6;--mut:#8e9aaa;--cy:#2fd6ff;--ok:#35e07f;--ng:#ff6b6f;--bezel:#14181e}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--font);display:flex;justify-content:center;padding:14px 12px 48px}
+.credit{text-align:center;color:var(--mut);font-size:13px;line-height:1.5;margin-top:8px}.credit a{color:inherit}
+main{width:min(100%,960px);display:flex;flex-direction:column;gap:10px}
+.top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px 14px;color:var(--mut);font-size:15px}
+.seg{display:flex;gap:6px;align-items:center}
+.seg span{font-size:14px}
+.seg button{font-size:15px;padding:6px 12px;border-radius:6px;font-weight:600}
+.seg button[aria-pressed=true]{border-color:#2fd6ff;color:#2fd6ff;background:linear-gradient(#17394a,#0e202a)}
+.top b{color:var(--txt);font-size:20px;font-weight:700}
+#notes{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:10px 16px;margin-bottom:10px;font-size:14px}#notes summary{cursor:pointer;color:var(--mut);font-weight:600}#notes ul{margin:8px 0 2px;padding-left:20px;line-height:1.6}#notes li{margin:2px 0}
+#clr{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:14px 18px}
+#clr .en{font-family:'Chakra Petch','Roboto Condensed',sans-serif;font-size:clamp(18px,3.2vw,27px);font-weight:600;font-style:italic;line-height:1.35;letter-spacing:.02em}
+#clr .en em{font-style:italic;color:var(--cy)}
+#clr .ja{color:var(--mut);font-size:clamp(13px,2.2vw,16px);margin-top:4px}
+.bezel{background:var(--bezel);border:1px solid var(--edge);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+#pfd{width:100%;height:auto;display:block;border-radius:6px;background:#000;font-family:var(--font)}
+.btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+button{font:inherit;font-weight:700;font-size:clamp(17px,3.2vw,24px);padding:14px 4px;border-radius:8px 8px 3px 3px;border:1px solid #5a626d;color:#fff;background:linear-gradient(#323840,#171a1e);cursor:pointer}
+button:hover:not(:disabled){border-color:#2fd6ff;color:#2fd6ff}
+button:focus-visible{outline:3px solid #2fd6ff;outline-offset:2px}
+button:disabled{cursor:default;opacity:.5}
+button.right{border-color:#35e07f;color:#35e07f;opacity:1;background:linear-gradient(#1c4a30,#102418)}
+button.wrong{border-color:#ff6b6f;color:#ff6b6f;opacity:1;background:linear-gradient(#55242a,#2a1215)}
+#res{display:none;background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:16px 18px;gap:16px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center}
+#res.show{display:grid}
+#verdict{font-size:26px;font-weight:700;margin-bottom:8px}
+#why{color:var(--mut);font-size:16px;line-height:1.65}
+#dia{width:100%;background:#0a0f16;border-radius:8px;border:1px solid var(--edge)}
+#next{margin-top:14px;padding:12px 26px;font-size:18px;border-radius:8px;border-color:#2fd6ff}
+@media (max-width:700px){#res.show{display:block}#dia{margin-top:12px}}
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);background:#101820;color:#fff;border:1px solid #2fd6ff;border-radius:10px;padding:10px 18px;font-size:17px;opacity:0;transition:.35s;pointer-events:none;z-index:9;max-width:90vw;text-align:center}#toast.on{opacity:1;transform:translate(-50%,0)}
+@keyframes fall{0%{transform:translate(0,-40px) rotate(0);opacity:1}100%{transform:translate(var(--dx),105vh) rotate(var(--rot));opacity:.9}}.cf{position:fixed;top:0;z-index:8;pointer-events:none;animation:fall var(--dur) ease-in forwards;font-size:26px}
+</style>
+</head>
+<body>
+<main>
+ <div class="top"><b>Holding Entry Trainer</b><div class="seg" role="group" id="g1" aria-label="指示の方位の言い方"><span id="l1">指示</span><button data-m="radial" aria-pressed="false">Radial</button><button data-m="bearing" aria-pressed="false">Bearing</button><button data-m="mix" aria-pressed="true">Mix</button></div><div class="seg" role="group" id="g2" aria-label="ナビソース"><span id="l2">ナビ</span><button data-s="gps" aria-pressed="true">GPS</button><button data-s="vor" aria-pressed="false">VOR</button><button data-s="mix" aria-pressed="false">Mix</button></div><div class="seg" role="group"><button id="zoom" aria-pressed="false">コンパス拡大</button></div><div class="seg" role="group" aria-label="Language"><button data-l="ja" aria-pressed="false">日本語</button><button data-l="en" aria-pressed="false">English</button></div><span id="score">正解 0 / 0</span></div>
+ <details id="notes"><summary id="nsum"></summary><ul id="nlist"></ul></details>
+ <div id="clr"></div>
+ <div class="bezel">
+  <svg id="pfd" viewBox="0 0 1064 798" role="img" aria-label="G1000風PFD。HSIが問題ごとに変わります"></svg>
+  <div class="btns">
+   <button data-a="Direct">Direct</button><button data-a="Teardrop">Teardrop</button><button data-a="Parallel">Parallel</button>
+  </div>
+ </div>
+ <section id="res" aria-live="polite">
+  <div><div id="verdict"></div><div id="why"></div><button id="next">次の問題</button></div>
+  <svg id="dia" viewBox="-300 -300 640 640"></svg>
+ </section>
+<footer class="credit">By Yuto Yukida<br><a href="mailto:y.yukida0732@gmail.com">y.yukida0732@gmail.com</a></footer>
+</main>
+<script>
+const FIXES=[ // 各空港のRNAV(GPS)進入のIAF(IF/IAF含む)
+ 'BAYYG','JOCOR','WUTSO','HOKKS','ERIXE','IGIME', // KGFK
+ 'GABSE','AVINE','ILUVE','IBXEN','AKKIF','FAPVU', // KCKN
+ 'IKAFY','OHUTO','VOYYU','CEVYA','HIPAT','NANOH', // KGAF
+ 'IKLAJ','GEMIH', // 3H4
+ 'CAGOS','DAKME', // 4V4
+ 'UHEVU','ZOCXE', // D37
+ 'BUMOY','CEVIG','DOLNE', // Y37
+ 'CALTU','ADOMY', // D14
+ 'WIBIX','ZENOL','WIMUS','ZEVOS','WINUL','ZUDOL','BETRA','BOOMS' // KTVF
+];
+let mode='mix',navMode='gps';
+const VORS=[{id:'GFK',freq:'114.30'},{id:'FAR',freq:'116.20'},{id:'RDR',freq:'116.40'},{id:'TVF',freq:'114.45'}];
+let LANG='ja';try{const sv=localStorage.getItem('hetLang');LANG=sv||((navigator.language||'').toLowerCase().startsWith('ja')?'ja':'en')}catch(e){LANG=(navigator.language||'').toLowerCase().startsWith('ja')?'ja':'en'}
+const tt=(ja,en)=>LANG=='ja'?ja:en;
+const DJ=['北','北東','東','南東','南','南西','西','北西'],DE=['north','northeast','east','southeast','south','southwest','west','northwest'];
+const $=s=>document.querySelector(s),norm=n=>((n%360)+360)%360,p3=n=>String(norm(n)||360).padStart(3,'0');
+const di=a=>Math.round(norm(a)/45)%8;
+let q,done,right=0,total=0;
+const T=(x,y,s,o={})=>`<text x="${x}" y="${y}" fill="${o.f||'#fff'}" font-size="${o.s||26}" text-anchor="${o.a||'start'}"${o.w?` textLength="${o.w}" lengthAdjust="spacingAndGlyphs"`:''}${o.b?' font-weight="700"':o.n?' font-weight="500"':o.m?' font-weight="600"':o.l?' font-weight="300"':''}>${s}</text>`;
+const L=(x1,y1,x2,y2,c='#fff',w=2)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}"/>`;
+
+function utc(){return new Date().toISOString().slice(11,19)}
+setInterval(()=>{const t=document.querySelector('#utc text');if(t)t.textContent=utc()},500);
+let fl={ias:100,alt:4000,vs:0,acc:0,tr:0};
+let altY=0,altBusy=false,altArm=false,altTm=[];
+function altWatch(){const off=Math.abs(fl.alt-4000)>=200;
+ if(off&&!altArm){altArm=true;altBusy=true;altY=1;let n=0;const tick=()=>{n++;if(n<4)altY=n%2?2:1;else{altBusy=false;altY=Math.abs(fl.alt-4000)>=200?1:0}if(lastDraw&&lastH!=null)lastDraw(lastH);if(n<4)setTimeout(tick,500)};setTimeout(tick,500)}
+ else if(!off&&altArm){altArm=false;if(!altBusy)altY=0}}
+const CLIM=[-9.5,-8.5,-4.5,1.5,7.5,12.5,16.5,16,10.5,4.5,-2.5,-7.5];
+function climo(){const d=new Date(),m=d.getMonth(),n=new Date(d.getFullYear(),m+1,0).getDate(),t=m+(d.getDate()-.5)/n-.5,i=Math.floor(t),f=t-i;return CLIM[(i+12)%12]*(1-f)+CLIM[(i+13)%12]*f}
+let OAT=climo();
+async function loadOAT(){try{const c=new AbortController(),tm=setTimeout(()=>c.abort(),7000);
+ const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=47.949&longitude=-97.176&hourly=temperature_925hPa,temperature_850hPa,geopotential_height_925hPa,geopotential_height_850hPa&forecast_days=2&timezone=UTC',{signal:c.signal});clearTimeout(tm);
+ const j=await r.json(),h=j.hourly,now=new Date().toISOString().slice(0,13)+':00';let i=h.time.findIndex(t=>t>=now);if(i<0)i=h.time.length-1;
+ const t1=h.temperature_925hPa[i],t2=h.temperature_850hPa[i],z1=h.geopotential_height_925hPa[i],z2=h.geopotential_height_850hPa[i],z=4000*.3048;
+ if([t1,t2,z1,z2].some(v=>typeof v!='number')||z2<=z1)return;
+ const t=t1+(t2-t1)*(z-z1)/(z2-z1);if(isFinite(t)&&t>-60&&t<50){OAT=t;if(typeof lastDraw=='function'&&lastH!=null)lastDraw(lastH)}}catch(e){}}
+function drawPFD(hdg,crs,fix,dis,wind,nav){
+ const pc=nav?'#3f3':'#f0f';
+ const H=303,cx=477,cy=605,r=158,K=6.65,rad=Math.PI/180;
+ let s=`<defs><linearGradient id="sk" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="303"><stop offset="0" stop-color="#0026e8"/><stop offset="1" stop-color="#3a60ec"/></linearGradient>
+ <linearGradient id="kb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c3138"/><stop offset="1" stop-color="#14171b"/></linearGradient>
+ <clipPath id="lad"><rect x="0" y="100" width="1064" height="700"/></clipPath>${[0,1,2,3,4,5,6,7].map(i=>`<clipPath id="cb${i}"><rect x="-30" y="${(-7+i*1.7).toFixed(2)}" width="60" height="2.05"/></clipPath>`).join('')}<clipPath id="lad2"><rect x="0" y="162" width="1064" height="248"/></clipPath><clipPath id="st"><rect x="160" y="120" width="90" height="352"/></clipPath><clipPath id="at"><rect x="731" y="120" width="109" height="352"/></clipPath></defs>
+ <rect width="1064" height="798" fill="#14171b"/><g transform="rotate(${ua.r} ${cx} 297) translate(0 ${ua.p*K})"><rect x="-2000" y="-2000" width="5064" height="${2000+H}" fill="url(#sk)"/><rect x="-2000" y="${H}" width="5064" height="2600" fill="#543209"/></g><g clip-path="url(#lad)"><g transform="rotate(${ua.r} ${cx} 297) translate(0 ${ua.p*K})">${L(-2000,H,3064,H,'#eee',2)}</g></g><g clip-path="url(#lad2)"><g transform="rotate(${ua.r} ${cx} 297) translate(0 ${ua.p*K})">
+ <g stroke="#fff" fill="#e8e8e8" font-size="15">`;
+ for(let p=2.5;p<=40;p+=2.5)for(const sg of[1,-1]){const y=H-sg*p*K,big=p%10==0,hw0=big?54:p%5==0?27:13,dy=y+ua.p*K-297,hw=hw0*(1+.5*(Math.sqrt(1+Math.pow(dy/300,2))-1)),tq=1;s+=L(cx-hw,y,cx+hw,y,'#fff',1.5);
+  if(big){const rr_=Math.hypot(hw+22,dy),k=.6*Math.sin(Math.atan(rr_/300))*(dy<0?1:-1),gs=1+1.2*(Math.sqrt(1+Math.pow(rr_/300,2))-1),lab=(ax)=>[0,1,2,3,4,5,6,7].map(b=>{const sx=1+k*(.5-(b+.5)/8);return `<g transform="translate(${ax} ${y})" clip-path="url(#cb${b})"><text x="0" y="5" stroke="none" text-anchor="middle" transform="scale(${(sx*gs).toFixed(3)} ${gs.toFixed(3)})">${p}</text></g>`}).join('');s+=lab(cx-hw-22)+lab(cx+hw+22)}}
+ s+=`</g></g></g>`;
+ const pt=(a,rr)=>[(cx+rr*Math.sin(a*rad)).toFixed(1),(H-3-rr*Math.cos(a*rad)).toFixed(1)],R=196;
+ const[a1,a2]=[pt(-60,R),pt(60,R)];
+ s+=`<g transform="rotate(${ua.r} ${cx} ${H-3})"><path d="M${a1} A${R} ${R} 0 0 1 ${a2}" fill="none" stroke="#fff" stroke-width="2.5"/>`;
+ for(const[a,l]of[[10,10],[20,10],[30,24],[45,10],[60,32]])for(const sg of[1,-1]){const[x1,y1]=pt(sg*a,R),[x2,y2]=pt(sg*a,R+l);s+=L(x1,y1,x2,y2,'#fff',2.5)}
+ s+=`<path d="M466 84h22l-11 18z" fill="#fff"/></g><path d="M477 106l12 18h-24z" fill="#fff"/><rect x="463" y="126" width="28" height="4" fill="#fff"/>
+ ${ua.on?`<g class="uab"><text x="${cx}" y="205" fill="#ff3b30" font-size="40" font-weight="700" text-anchor="middle" stroke="#000" stroke-width="5" paint-order="stroke">UNUSUAL ATTITUDE</text><text x="${cx}" y="245" fill="#ff3b30" font-size="30" font-weight="700" text-anchor="middle" stroke="#000" stroke-width="4" paint-order="stroke">RECOVER</text></g>`:''}<path d="M355 328L477 297L415 328Z M599 328L477 297L539 328Z" fill="#e8e000" stroke="#7a7400" stroke-width="2"/><rect x="266" y="292" width="47" height="8" rx="3" fill="#e8e000"/><rect x="643" y="292" width="47" height="8" rx="3" fill="#e8e000"/>`;
+ /* speed tape */
+ const IA=fl.ias,OATs=Math.round(OAT)+'°C',ISAs=(d=>(d>=0?'+':'')+d+'°C')(Math.round(OAT-(15-1.98*4))),TS=Math.round(IA/Math.sqrt(Math.pow(1-6.8756e-6*fl.alt,5.2559)/((OAT+273.15)/288.15))),ys=v=>296-(v-IA)*5.9,cl=y=>Math.max(120,Math.min(472,y));
+ const n0=Math.floor(IA),sfr=IA-n0,tens=Math.floor(n0/10),dg=d=>String(((d%10)+10)%10),O={s:38,w:19,n:1};
+ const spd=fl.lost?T(190,309,'---',{s:38,w:50,n:1,a:'middle'}):(tens>=10?T(168,309,String(Math.floor(tens/10)%10),O):'')+(tens>=1?T(188.5,309,dg(tens),O):'')+'<g clip-path="url(#dr1)">'+[2,1,0,-1].map(o=>T(209,309-o*52+sfr*52,dg(n0+o),{...O,f:o?'#bbb':'#fff'})).join('')+'</g>';
+ s+=`<rect x="160" y="120" width="90" height="352" rx="14" fill="#000" fill-opacity=".5"/><g clip-path="url(#st)">
+ <rect x="240" y="${ys(125)}" width="8" height="${ys(50)-ys(125)}" fill="#2db84d"/><rect x="240" y="${ys(50)}" width="8" height="${ys(45)-ys(50)}" fill="#fff"/><rect x="240" y="${ys(102)}" width="4" height="${ys(45)-ys(102)}" fill="#fff"/><rect x="240" y="${ys(154)}" width="8" height="${ys(125)-ys(154)}" fill="#e8d000"/><rect x="240" y="${ys(154)-400}" width="8" height="400" fill="#e22"/><rect x="240" y="${ys(45)}" width="8" height="${ys(20)-ys(45)}" fill="#e22"/>`;
+ for(let v=Math.max(20,Math.floor(IA/5)*5-40);v<=IA+40;v+=5){const y=ys(v),M=v%10==0;s+=L(M?229:233,y,237,y,'#fff',2);if(M)s+=T(224,y+9,v,{a:'end',s:28})}
+ s+=`</g><clipPath id="dr1"><rect x="208" y="248" width="28" height="96"/></clipPath><path d="M166 265H208V248H236V344H208V327H166Z" fill="#000"/><rect x="208" y="248" width="28" height="96" fill="#1b1b1b"/><path d="M166 265H208V248H236V344H208V327H166Z" fill="none" stroke="#bbb" stroke-linejoin="round"/><path d="M236 272l16 24l-16 24z" fill="#000" stroke="#ddd" stroke-width="1.5"/>${spd}
+ <g transform="translate(0 ${ys(64)-438})"${ys(64)<140||ys(64)>455?' display="none"':''}><path d="M250 438l9-12h17v24h-17z" fill="#000" stroke="#777" stroke-width="1.5"/>${T(268,445,'X',{f:'#2fd6ff',s:17,a:'middle',b:1})}</g>
+ <g transform="translate(0 ${ys(76)-438})"${ys(76)<140||ys(76)>455?' display="none"':''}><path d="M250 438l9-12h17v24h-17z" fill="#000" stroke="#777" stroke-width="1.5"/>${T(268,445,'Y',{f:'#2fd6ff',s:17,a:'middle',b:1})}</g>
+ <rect x="160" y="472" width="90" height="30" fill="#14171b"/>${T(163,494,'TAS',{s:13,w:23})}${T(207,495,fl.lost?'---':String(TS),{s:23,a:'middle',w:fl.lost?34:String(TS).length*11.34})}${T(227,494,'KT',{s:13,w:18})}
+ <rect x="255" y="475" width="84" height="46" rx="3" fill="#14171b" fill-opacity=".92"/><g transform="translate(278 498) rotate(${wind.rel})"><path d="M0 13V-9M-5 -4L0 -10L5 -4" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></g>${T(330,507,wind.spd,{s:24,a:'end'})}`;
+ /* alt tape */
+ altWatch();const ac=altY==1?'#ffe600':altY==2?'none':'#2fd6ff',AL=fl.alt,ya=a=>296-(a-AL)*.585,a20=Math.floor(AL/20)*20,af=(AL-a20)/20,a2x=v=>String(((v%100)+100)%100).padStart(2,"0"),bigN=String(Math.max(0,Math.floor(a20/100))),bdy=Math.max(130,Math.min(462,ya(4000)))-296;
+ const altD=T(748,309,bigN,{s:38,w:22*bigN.length,n:1})+'<g clip-path="url(#dr2)">'+[2,1,0,-1].map(o=>T(816,307-o*50+af*50,a2x(a20+o*20),{s:30,a:'middle',w:32,n:1,f:o?'#bbb':'#fff'})).join('')+'</g>';
+ s+=`<rect x="731" y="120" width="109" height="352" rx="4" fill="#000" fill-opacity=".5"/><g clip-path="url(#at)">`;
+ for(let a=Math.max(0,Math.floor((AL-320)/20)*20);a<=AL+320;a+=20){const y=ya(a),M=a%100==0;s+=L(731,y,M?750:739,y,'#fff',2);if(M)s+=T(831,y+9,a,{a:'end',s:27})}
+ s+=`</g><rect x="731" y="88" width="109" height="32" fill="#000" stroke="#555"/><path d="M737 94h14v22h-14z M751 100l-7 5l7 5z" fill="${ac}" fill-rule="evenodd"/><path d="M737 94h14v22h-14z" fill="${ac}"/><path d="M751 100l-7 5.5l7 5.5z" fill="#000"/>${T(796,114,'40',{f:ac,s:27,a:'end',w:32})}${T(799,114,'00',{f:ac,s:20,w:22})}
+ <g transform="translate(0 ${bdy})"${ya(4000)<130||ya(4000)>462?' display="none"':''}><path d="M717 283H735V309H717Z" fill="#2fd6ff"/><path d="M735 289L727 296L735 303Z" fill="#000"/></g><path d="M731 296l13-17v34z" fill="#000" stroke="#ddd" stroke-width="1.5"/><clipPath id="dr2"><rect x="796" y="248" width="41" height="96"/></clipPath><path d="M743 265H796V248H837V344H796V327H743Z" fill="#000"/><rect x="796" y="248" width="41" height="96" fill="#1b1b1b"/><path d="M743 265H796V248H837V344H796V327H743Z" fill="none" stroke="#bbb" stroke-linejoin="round"/>${altD}
+ <rect x="731" y="472" width="109" height="30" fill="#14171b"/>${T(748,495,'29.92<tspan font-size="14">IN</tspan>',{f:'#2fd6ff',s:25})}
+ <rect x="841" y="138" width="48" height="317" rx="10" fill="#000" fill-opacity=".5"/>`;
+ for(let k=-2;k<=2;k+=.5){const y=296-k*71,M=k%1==0;s+=L(841,y,M?856:850,y,'#fff',2);if(M&&k)s+=T(868,y+8,Math.abs(k),{s:23})}
+ s+=`<g transform="translate(0 ${-Math.max(-2.2,Math.min(2.2,fl.vs/1000))*71})"><path d="M841 296l24-13h48v26h-48z" fill="#000" stroke="#999"/>${Math.abs(fl.vs)>=100?T(908,303,String(Math.max(-9990,Math.min(9990,Math.round(fl.vs/50)*50))),{s:17,a:'end',w:String(Math.max(-9990,Math.min(9990,Math.round(fl.vs/50)*50))).length*9}):''}</g>`;
+ {const tl=(x,v,k)=>{const y2=Math.max(120,Math.min(472,296-v*k));return Math.abs(296-y2)<3?'':`<rect x="${x}" y="${Math.min(296,y2)}" width="4" height="${Math.abs(296-y2)}" fill="#f0f"/>`};s+=tl(250,(fl.acc||0)*6,5.9)+tl(727,(fl.vs||0)/10,.585)}
+ const ta=Math.max(-27,Math.min(27,(fl.tr||0)*6)),TR=r+5,tp=a=>[(cx+TR*Math.sin(a*rad)).toFixed(1),(cy-TR*Math.cos(a*rad)).toFixed(1)],sgn=ta>0?1:-1;
+ const turnTrend=Math.abs(ta)<1.5?'':`<path d="M${cx} ${cy-TR}A${TR} ${TR} 0 0 ${ta>0?1:0} ${tp(ta)}" fill="none" stroke="#f0f" stroke-width="4"/>${Math.abs(ta)<26.99?'':`<g transform="rotate(${ta} ${cx} ${cy})"><path d="M${cx+sgn*14} ${cy-TR}L${cx} ${cy-TR-8}V${cy-TR+8}z" fill="#f0f"/></g>`}`;
+ /* HSI */
+ s+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="#999" fill-opacity=".1"/><g transform="rotate(${-hdg} ${cx} ${cy})">`;
+ for(let a=0;a<360;a+=5){const l=a%10?8:a%30?14:18;s+=L(cx,cy-r,cx,cy-r+l,'#fff',a%10?2:3).replace('<line',`<line transform="rotate(${a} ${cx} ${cy})"`);
+  if(a%30==0)s+=`<text transform="rotate(${a} ${cx} ${cy})" x="${cx}" y="${cy-r+46}" fill="#fff" font-size="${a%90?26:34}" text-anchor="middle">${a%90?a/10:'NESW'[a/90]}</text>`}
+ s+=`<g transform="rotate(${(()=>{if(typeof q!="object"||!q||!q.wv)return nav?nav.dtk:crs;const R=Math.PI/180,V=Math.max(fl.ias,20);return Math.atan2(V*Math.sin(hdg*R)+q.wv[0],V*Math.cos(hdg*R)+q.wv[1])/R})()} ${cx} ${cy})"><path d="M${cx} ${cy-r-12}l7 10l-7 10l-7-10z" fill="#f0f"/></g><g transform="rotate(${crs} ${cx} ${cy})"><path d="M${cx} ${cy-r+8}l-11 24h22z" fill="${pc}"/>${L(cx,cy-r+30,cx,cy-63,pc,5)}${nav&&nav.flag=='FROM'?`<path d="M${cx} ${cy+77}l-8 -14h16z" fill="${pc}"/>`:`<path d="M${cx} ${cy-77}l-8 14h16z" fill="${pc}"/>`}${L(cx+(nav?nav.dev:0),cy-58,cx+(nav?nav.dev:0),cy+58,pc,5)}${L(cx,cy+63,cx,cy+r-34,pc,5)}
+ <g fill="none" stroke="#fff" stroke-width="2.5">${[-70,-35,35,70].map(d=>`<circle cx="${cx+d}" cy="${cy}" r="6"/>`).join('')}</g></g><g transform="rotate(${nav&&nav.bug!=null?nav.bug:crs} ${cx} ${cy})"><path d="M${cx-12} ${cy-r-2}H${cx-5}L${cx} ${cy-r+2}L${cx+5} ${cy-r-2}H${cx+12}V${cy-r+8}H${cx-12}Z" fill="#2fd6ff"/></g>${nav?`<g transform="rotate(${nav.adf} ${cx} ${cy})" fill="none" stroke="#2fd6ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M${cx} ${cy-r+38}V${cy+r-38}M${cx-15} ${cy-r+72}L${cx} ${cy-r+48}L${cx+15} ${cy-r+72}"/></g>`:''}</g>
+ <path transform="translate(${cx} ${cy})" d="M0-22L3-16V-5L20-3V2L3 6V13L9 17V20L0 18L-9 20V17L-3 13V6L-20 2V-3L-3-5V-16Z" fill="#fff"/>
+ ${T(nav?428:439,568,nav?'VOR1':'GPS',{f:pc,s:28,a:'middle',n:1})}${nav?'':T(518,568,'ENR',{f:'#f0f',s:28,a:'middle',n:1})}
+ <path d="M${cx} 455l-9-15h18z" fill="#fff"/>${[-90,-45,45,90].map(d=>L(cx,cy-r,cx,cy-r-15,'#fff',4).replace('<line',`<line transform="rotate(${d} ${cx} ${cy})"`)).join('')}${[-18,18].map(d=>L(cx,cy-r-3,cx,cy-r-25,'#fff',2.5).replace('<line',`<line transform="rotate(${d} ${cx} ${cy})"`)).join('')}${[-9,9].map(d=>L(cx,cy-r-1,cx,cy-r-9,'#fff',2.5).replace('<line',`<line transform="rotate(${d} ${cx} ${cy})"`)).join('')}${turnTrend}<rect x="434" y="405" width="87" height="35" fill="#000" stroke="#ddd"/>${T(477,433,p3(Math.round(norm(hdg)))+'°',{s:34,a:'middle',w:73})}
+ <rect x="282" y="438" width="122" height="32" rx="4" fill="#14171b"/>${T(290,464,'HDG',{s:17,l:1,w:36})}${T(396,464,p3(Math.round(norm(nav&&nav.bug!=null?nav.bug:crs))||360)+'°',{f:'#2fd6ff',s:27,a:'end',w:58,n:1})}
+ <rect x="566" y="438" width="122" height="32" rx="4" fill="#14171b"/>${T(574,464,'CRS',{s:17,l:1,w:36})}${T(680,464,p3(crs)+'°',{f:pc,s:27,a:'end',w:58,n:1})}${nav?`<path d="M236 670H324.3A166 166 0 0 0 383.3 742H236Z" fill="#050505" fill-opacity=".5"/>${(()=>{const w=nav.dme.length==3?33:44;return T(244,692,nav.dme,{s:22,w})+T(244+w+4,692,'NM',{s:14,w:20})})()}${T(244,714,nav.id,{f:'#2fd6ff',s:24,w:44})}${T(244,735,'NAV1',{s:20,w:48})}<path d="M364 729H300M300 729l6-4M300 729l6 4" fill="none" stroke="#2fd6ff" stroke-width="1.8" stroke-linecap="round"/>`:''}`;
+ /* bars (drawn before compass bottom? placed first via order below) */
+ const top=`<g font-weight="450"><g fill="#14171b" stroke="#444"><path d="M0 0H260V46Q260 58 248 58H0z"/><path d="M268 0H796V46Q796 58 784 58H280Q268 58 268 46z"/><path d="M803 0H1064V58H815Q803 58 803 46z"/><rect x="803" y="62" width="261" height="21" rx="4"/></g>
+ ${L(268,27,796,27,'#444',1)}${L(396,27,396,58,'#444',1)}${L(517,27,517,58,'#444',1)}
+ ${T(4,20,'N',{s:17})}${T(4,38,'A',{s:17})}${T(4,56,'V',{s:17})}${T(18,26,'1',{s:17})}${T(18,52,'2',{s:17})}
+ <rect x="29" y="2" width="80" height="28" fill="none" stroke="#2fd6ff" stroke-width="1.5"/>${T(31,25,'110.90',{s:28,w:76})}<path d="M109 15H131M109 15l6-5M109 15l6 5M131 15l-6-5M131 15l-6 5" fill="none" stroke="#2fd6ff" stroke-width="2.2" stroke-linecap="round"/>${T(132,25,nav?nav.freq:'112.10',{f:nav?'#3f3':'#fff',s:28,w:77})}${T(31,54,'110.50',{s:28,w:76})}${T(132,54,'112.70',{s:28,w:77})}${nav?T(212,25,nav.id,{f:'#3f3',s:24,w:40}):''}
+ ${nav?'':`
+ <path d="M358 7.5H362A8 8 0 0 1 362 23.5H358Z" fill="none" stroke="#f0f" stroke-width="3.4" stroke-linejoin="round"/><path d="M351 15.5H377" stroke="#f0f" stroke-width="3"/><path d="M375 10.5L381 15.5L375 20.5Z" fill="#f0f"/>${T(389,25,fix,{f:'#f0f',s:27})}
+ ${T(560,24,'DIS',{s:19,w:30})}${T(594,25,dis,{f:'#f0f',s:26,w:dis.length>3?50:38})}${T(598+(dis.length>3?50:38),25,'NM',{f:'#f0f',s:15,w:22})}${T(688,24,'BRG',{s:19,w:34})}${T(726,25,p3(crs)+'°',{f:'#f0f',s:26,w:50})}`}
+ ${T(810,25,'118.100',{f:'#3f3',s:28,w:89})}<path d="M902 15H924M902 15l6-5M902 15l6 5M924 15l-6-5M924 15l-6 5" fill="none" stroke="#2fd6ff" stroke-width="2.2" stroke-linecap="round"/><rect x="928" y="2" width="92" height="28" fill="none" stroke="#2fd6ff" stroke-width="1.5"/>${T(931,25,'118.400',{s:28,w:87})}
+ ${T(810,54,'119.400',{s:28,w:89})}${T(902,52,'RX',{s:15})}${T(931,54,'124.575',{s:28,w:87})}${T(1034,22,'1',{s:16})}${T(1046,15,'C',{s:17})}${T(1046,33,'O',{s:17})}${T(1034,52,'2',{s:16})}${T(1046,52,'M',{s:17})}</g>`;
+ const bot=`<rect x="0" y="733" width="1064" height="65" fill="#14171b"/>${L(232,740,232,764,'#333',1)}${L(336,740,336,764,'#333',1)}
+ ${T(5,760,'OAT',{s:18,w:34})}<text x="50" y="760" fill="#fff" font-size="26">${OATs}<tspan font-size="18" dx="14">ISA</tspan><tspan dx="12">${ISAs}</tspan></text>
+ ${T(760,760,'XPDR',{s:18,w:42})}${T(808,760,'1200 ALT',{f:'#3f3',s:28,w:102})}${T(915,750,'R',{s:14})}${T(928,760,'UTC',{s:18,w:34})}<g id="utc">${T(968,760,utc(),{s:27,w:90})}</g>`;
+ let keys='';['','Map/HSI','TFC Map','PFD Opt','OBS','CDI','ADF/DME','XPDR','Ident','Tmr/Ref','Nearest','Alerts'].forEach((k,i)=>{const x=i?90+(i-1)*88.5:0,w=i?88.5:90;
+  keys+=`<path d="M${x+1} 798V776Q${x+1} 767 ${x+10} 767H${x+w-10}Q${x+w-1} 767 ${x+w-1} 776V798z" fill="url(#kb)" stroke="#555"/>${T(x+w/2,790,k,{a:'middle',s:20,w:Math.min(k.length*10,74),f:k=='OBS'?'#666':'#fff'})}`});
+  if(nav)keys+=`<g id="icpt" style="cursor:pointer"><rect x="655" y="655" width="134" height="42" rx="8" fill="url(#kb)" stroke="#aaa" stroke-width="2"/>${T(722,684,'Intercept',{a:'middle',s:24,w:104,f:nav.icpt?'#777':'#fff'})}</g>`;
+ keys+=`<rect x="${90+88.5+44.25-20}" y="793" width="40" height="4" rx="2" fill="#aaa"/>`;
+ $('#pfd').innerHTML=s.replace('<circle cx="477" cy="605"',bot+'<circle cx="477" cy="605"')+top+keys+'<rect id="com" x="712" y="0" width="352" height="56" fill="transparent"/><rect id="wnd" x="255" y="475" width="84" height="46" fill="transparent"/>';
+}
+
+/* ---------- 問題 ---------- */
+function sector(rel,turn){const rr=turn=='L'?norm(360-rel):rel;return{rr,a:(rr>=290||rr<=110)?'Direct':rr<=180?'Teardrop':'Parallel'}}
+function gen(){const want=Math.random()<.15;let n=0;do gen0();while(q.src=='vor'&&!q.opp&&q.inner!=want&&++n<300)}
+function gen0(){
+ const turn=Math.random()<.15?'L':'R',ic=5*(1+Math.floor(Math.random()*72)),radial=norm(ic+180)||360;
+ const src=navMode=='mix'?(Math.random()<.5?'gps':'vor'):navMode,vor=VORS[Math.floor(Math.random()*VORS.length)],HD=Math.random()<.1?0:5+Math.floor(Math.random()*26);
+ const kind=src=='vor'?'radial':mode=='mix'?(Math.random()<.5?'radial':'bearing'):mode,opp=kind=='radial'&&src=='vor'&&HD>0&&Math.random()<.7,ang=kind=='radial'&&!opp?radial:ic;
+ const ent=['Direct','Teardrop','Parallel'][Math.floor(Math.random()*3)],Rg={Direct:[-58,98],Teardrop:[122,168],Parallel:[192,278]}[ent];
+ const rr0=Rg[0]+Math.floor(Math.random()*(Rg[1]-Rg[0]+1)),crs0=norm(ic+(turn=='L'?norm(360-rr0):norm(rr0)))||360;
+ let hdg,crs,wind,wv,flag='TO',dev=0;
+ if(src=='vor'){ // CRS = 指示された radial/bearing、HDG は局へ直行する向き(±10°)
+  let gs,wx,wy;
+  do{hdg=norm(crs0+Math.floor(Math.random()*21)-10)||360;gs=100+Math.floor(Math.random()*25)-12;const r=Math.PI/180;wx=gs*Math.sin(crs0*r)-100*Math.sin(hdg*r);wy=gs*Math.cos(crs0*r)-100*Math.cos(hdg*r)}while(Math.round(Math.hypot(wx,wy))<2);
+  {let e=Math.abs(norm(hdg-ang));if(e>180)e=360-e;crs=e<=90?ang:(norm(ang+180)||360)}
+  wind={spd:Math.round(Math.hypot(wx,wy)),rel:Math.round(norm(Math.atan2(wx,wy)*180/Math.PI-hdg))};wv=[wx,wy];
+  const dd=norm(hdg-crs);flag=(dd<=90||dd>=270)?'TO':'FROM';
+  const Ra=norm(hdg+180),Rc=flag=='TO'?norm(crs+180):crs;let d=norm(Rc-Ra);if(d>180)d-=360;
+  dev=Math.max(-2.2,Math.min(2.2,(flag=='TO'?-d:d)/5))*35;
+ }else{
+  crs=crs0;let gs,wx,wy;
+  do{hdg=norm(crs+Math.floor(Math.random()*21)-10)||360;gs=100+Math.floor(Math.random()*25)-12;const r=Math.PI/180;wx=gs*Math.sin(crs*r)-100*Math.sin(hdg*r);wy=gs*Math.cos(crs*r)-100*Math.cos(hdg*r)}while(Math.round(Math.hypot(wx,wy))<2);
+  wind={spd:Math.round(Math.hypot(wx,wy)),rel:Math.round(norm(Math.atan2(wx,wy)*180/Math.PI-hdg))};wv=[wx,wy];
+ }
+ const rel=norm(crs0-ic);
+ 
+ q={wv,dtk:crs0,src,vor,flag,dev,hdist:HD,dme:(HD?1.5+Math.random()*(HD-3):8+Math.random()*32).toFixed(1),wind,dis:(5+Math.random()*10).toFixed(1),fix:src=='vor'?vor.id:((r=>r<.01?'TOKAI':r<.02?'REESE':FIXES[Math.floor(Math.random()*FIXES.length)])(Math.random())),radial,ic,kind,opp,ang,crs,turn,hdg,rel,...sector(rel,turn)};
+ q.inner=(Math.cos(q.rr*Math.PI/180)<0)!==opp;
+ if(src=='vor'&&opp){const fr=crs==ang,Ra=norm(hdg+180);let d=norm((fr?crs:crs+180)-Ra);if(d>180)d-=360;q.flag=fr?'FROM':'TO';q.dev=Math.max(-2.2,Math.min(2.2,(fr?d:-d)/5))*35}
+ else if(src=='vor'&&q.inner&&q.flag!='FROM'){const Ra=norm(hdg+180);let d=norm(crs-Ra);if(d>180)d-=360;q.flag='FROM';q.dev=Math.max(-2.2,Math.min(2.2,d/5))*35}
+ if(q.hdist){const c=q.inner?-Math.abs(Math.cos(q.rr*Math.PI/180)):Math.abs(Math.cos(q.rr*Math.PI/180)),n=Math.random()*1.2;q.dme=(c<0?Math.max(1.5,Math.min(q.hdist-1.5,q.hdist*(1-.85*-c)-n)):q.hdist+Math.max(1.5,c*18)+n).toFixed(1)}
+ q.adf0=q.dtk;if(q.hdist){const R=Math.PI/180,u=[Math.sin(q.dtk*R),Math.cos(q.dtk*R)],wa=(opp?q.ic+180:q.ic)*R,w=[Math.sin(wa),Math.cos(wa)],c=u[0]*w[0]+u[1]*w[1],H=q.hdist;let D=+q.dme;if(!q.inner&&D*D<H*H*(1-c*c))D=H*Math.sqrt(1-c*c)+.3;const d=Math.max(0,-H*c+Math.sqrt(Math.max(0,D*D-H*H*(1-c*c)))),X=w[0]*H+u[0]*d,Y=w[1]*H+u[1]*d;q.adf0=norm(Math.atan2(X,Y)/R)||360;q.dme=D.toFixed(1)}
+ if(src=='vor'){const wr=x=>{x=norm(x);return x>180?x-360:x},to=Math.abs(wr(q.crs-q.adf0))<=90,d=wr((to?q.crs+180:q.crs)-norm(q.adf0+180));q.flag=to?'TO':'FROM';q.dev=Math.max(-2.2,Math.min(2.2,(to?-d:d)/5))*35}
+}
+/* Piper Archer II (PA-28-181): 180hp / 2500rpm 固定ピッチ、重量2300lb。質点モデル(推力=プロペラ効率×出力/速度、放物線抗力、バンクによる荷重倍数、失速域の抗力増) */
+const ARCHER={W:2300,S:160,rho:.002377,CD0:.0365,k:.0539,CLmax:1.6,hp:180,eta:.8,Tstat:560,
+ ias(ias,pitch,bank,alt,dt,kd){const a=this,m=a.W/32.174,V=Math.max(ias*1.688,5),q=.5*a.rho*V*V,n=1/Math.cos(Math.min(Math.abs(bank),75)*Math.PI/180),
+  CL=n*a.W/(q*a.S),CD=CL<=a.CLmax?a.CD0+a.k*CL*CL:a.CD0+a.k*a.CLmax*a.CLmax+(CL-a.CLmax)*.8,D=q*a.S*CD,
+  P=a.eta*a.hp*550*Math.max(.3,1-.035*alt/1000),T=Math.min(a.Tstat,P/Math.max(V,30)),
+  dV0=((T-D)/m-32.174*Math.sin(pitch*Math.PI/180))*dt,dV=dV0<0&&kd?dV0*kd:dV0;return Math.max(0,(V+dV)/1.688)}};
+ARCHER.gamma=function(ias,pitch,bank,alt){const a=this,al=(V,n)=>{const q=.5*a.rho*Math.pow(Math.max(V,5)*1.688,2),CL=Math.min(3,n*a.W/(q*a.S));return CL<=a.CLmax?CL/.094:a.CLmax/.094+(CL-a.CLmax)/.03},n=1/Math.cos(Math.min(Math.abs(bank),75)*Math.PI/180);return Math.max(-70,Math.min(70,pitch-(al(ias,n)-al(100,1))))};
+function stopUA(){cancelAnimationFrame(uaId);cancelAnimationFrame(turbId);turb=false;ua={r:0,p:0,on:false,run:false};fl={ias:100,alt:4000,vs:0,acc:0,tr:0}}
+function enterUA(){
+ if(ua.run||turb||!lastDraw||lastH==null)return;cancelAnimationFrame(spinId);
+ const sg=Math.random()<.5?1:-1,up=Math.random()<.5,B=40+Math.random()*20,P0=(up?1:-1)*(11+Math.random()*5),h0=lastH,draw=lastDraw,t0=performance.now(),RUN=13,RAD=Math.PI/180;
+ let last=t0,hd=h0,drift=0,vsL=0,accL=0,trL=0,pp=0,stalled=false;ua={r:0,p:0,on:true,run:true};fl={ias:100,alt:4000,vs:0,acc:0,tr:0};
+ const f=now=>{const dt=Math.min(.05,(now-last)/1000),t=(now-t0)/1000;last=now;
+  const e=1-Math.pow(1-Math.min(1,t/.9),2.5);
+  if(t>.9)drift=Math.max(-26,Math.min(26,drift+(up?1.3:-1.5)*dt));
+  ua.r=sg*B*e;
+  if(!stalled&&up&&t>1&&fl.ias<=50)stalled=true;
+  if(stalled){const tp=fl.ias>85?-3:-22;pp+=Math.max(-17*dt,Math.min(17*dt,tp-pp));ua.p=pp}else{ua.p=Math.max(-38,Math.min(38,P0*e+drift));pp=ua.p}
+  const gm=ARCHER.gamma(fl.ias,ua.p,ua.r,fl.alt),sp=Math.sin(gm*RAD);
+  const i0=fl.ias;if(!fl.lost){const ni=ARCHER.ias(fl.ias,gm,ua.r,fl.alt,dt,up?2.4:1);if(ni<20){fl.lost=true;fl.ias=20}else fl.ias=Math.min(230,ni)}
+  accL+=((fl.lost?0:(fl.ias-i0)/Math.max(dt,.001))-accL)*(1-Math.exp(-dt/1.5));fl.acc=accL;const vs=1.688*fl.ias*sp;fl.alt=Math.max(0,fl.alt+vs*dt);vsL+=(vs*60-vsL)*(1-Math.exp(-dt/1.5));fl.vs=vsL;
+  const trRaw=-Math.sign(ua.r)*Math.tan(Math.abs(ua.r)*RAD)*9.81/(Math.max(fl.ias,30)*.5144)/RAD;hd=norm(hd+trRaw*dt);trL+=(trRaw-trL)*(1-Math.exp(-dt/1.5));fl.tr=trL;
+  lastH=hd;draw(hd);
+  if(t<RUN)uaId=requestAnimationFrame(f);else recover(hd,h0,draw)};
+ uaId=requestAnimationFrame(f)}
+function recover(h1,h0,draw){const v1=fl.vs,r1=ua.r,p1=ua.p,i1=fl.ias,a1=fl.alt,t0=performance.now();let dd=norm(h0-h1);if(dd>180)dd-=360;ua.on=false;fl.lost=false;
+ const f=now=>{const k=Math.min(1,(now-t0)/1600),e=1-Math.pow(1-k,2.5);ua.r=r1*(1-e);ua.p=p1*(1-e);fl.ias=i1+(100-i1)*e;fl.alt=a1+(4000-a1)*e;fl.vs=v1*(1-e);fl.acc=0;fl.tr=0;lastH=norm(h1+dd*e);draw(lastH);
+  if(k<1)uaId=requestAnimationFrame(f);else{ua.run=false;lastH=h0;draw(h0)}};
+ uaId=requestAnimationFrame(f)}
+let comT=[],wndT=[],streak=0,turbId=0,turb=false;
+function turbulence(){
+ if(ua.run||turb||!lastDraw||lastH==null)return;turb=true;cancelAnimationFrame(spinId);
+ const h0=lastH,draw=lastDraw,t0=performance.now(),DUR=7,r=()=>Math.random()*6.28,ph=[r(),r(),r(),r(),r(),r()];
+ const nz=(t,a,b,i)=>.6*Math.sin(a*t+ph[i])+.4*Math.sin(b*t+ph[i+1]);
+ let pi=100,pa=4000,ph0=h0,pt=0,vsS=0,accS=0,trS=0,vs1=0,tr1=0;
+ const f=now=>{const t=(now-t0)/1000,dt=Math.max(t-pt,.001);pt=t;
+  const env=Math.min(1,t/.5)*Math.min(1,Math.max(0,(DUR-t)/1));
+  const i=100+10*env*nz(t,.9,1.8,0),a=4000+100*env*nz(t,.8,1.6,2),h=norm(h0+10*env*nz(t,1,1.9,4));
+  let dh=h-ph0;if(dh>180)dh-=360;if(dh<-180)dh+=360;
+  vsS+=((a-pa)/dt*60-vsS)*(1-Math.exp(-dt/3));accS+=((i-pi)/dt-accS)*(1-Math.exp(-dt/4));trS+=(dh/dt-trS)*(1-Math.exp(-dt/4));const g=t<DUR?1:Math.max(0,1-(t-DUR)/2.5);fl={ias:i,alt:a,vs:vsS*g,acc:accS*g,tr:trS*g};const k1=1-Math.exp(-dt/1.5),R=Math.PI/180,cl=(x,m)=>Math.max(-m,Math.min(m,x));vs1+=((a-pa)/dt*60-vs1)*k1;tr1+=(dh/dt-tr1)*k1;
+  ua.r=g*cl(Math.atan(i*.5144*(-tr1)*R/9.81)/R,20);ua.p=g*cl(Math.asin(cl(vs1/60/(i*1.688),1))/R,10);
+  pi=i;pa=a;ph0=h;lastH=h;draw(h);
+  if(t<DUR+2.5)turbId=requestAnimationFrame(f);else{fl={ias:100,alt:4000,vs:0,acc:0,tr:0};ua.r=0;ua.p=0;lastH=h0;draw(h0);turb=false}};
+ turbId=requestAnimationFrame(f)}
+const CEL=['Sioux52, cleared for the approach, contact tower.','Sioux52, nice flying. Cleared direct, say altitude.','Sioux52, radar contact lost... you are too good.','Sioux52, you are the traffic. Everyone else, hold.'];
+function celebrate(n){toast(`${n}連続正解! ${CEL[Math.min(CEL.length-1,n/10-1)]}`,4200);
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const em=['✈️','🛩️','⭐','🎉','🛫'];for(let i=0;i<36;i++){const e=document.createElement('div');e.className='cf';e.textContent=em[i%em.length];
+  e.style.left=Math.random()*100+'vw';e.style.setProperty('--dx',(Math.random()*160-80)+'px');e.style.setProperty('--rot',(Math.random()*720-360)+'deg');e.style.setProperty('--dur',(1.8+Math.random()*1.6)+'s');e.style.animationDelay=Math.random()*.6+'s';
+  document.body.appendChild(e);setTimeout(()=>e.remove(),4200)}}
+const toast=(m,ms=3000)=>{let t=$('#toast');if(!t){t=document.createElement('div');t.id='toast';document.body.appendChild(t)}t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),ms)};
+addEventListener('pointerdown',e=>{if(!e.target.closest||!e.target.closest('#pfd'))return;const n=performance.now();
+ if(e.target.id=='wnd'){wndT=wndT.filter(t=>n-t<2500);wndT.push(n);if(wndT.length>=10){wndT=[];turbulence()}return}
+ if(e.target.id=='com'){comT=comT.filter(t=>n-t<2500);comT.push(n);if(comT.length>=10){comT=[];toast('Sioux52, standby.')}return}
+ uaT=uaT.filter(t=>n-t<2500);uaT.push(n);if(uaT.length>=10){uaT=[];enterUA()}});
+let icpt=false;
+let lastH=null,spinId=0,lastDraw=null,ua={r:0,p:0,on:false,run:false},uaId=0,uaT=[];
+function render(){const v=q.src=='vor';let hdg=q.hdg,wind=q.wind,nav=null,pre=null;
+ if(v){nav={id:q.vor.id,freq:q.vor.freq,dme:q.dme,flag:q.flag,dev:q.dev,dtk:q.dtk,adf:q.adf0,bug:null,icpt};
+  if(icpt){const r=Math.PI/180,T=q.a=='Direct'?q.ic:norm(q.ic+180)||360,[wx,wy]=q.wv,wp=wx*Math.cos(T*r)-wy*Math.sin(T*r);
+   hdg=norm(Math.round(T+Math.asin(Math.max(-1,Math.min(1,-wp/100)))/r))||360;
+   wind={spd:q.wind.spd,rel:Math.round(norm(Math.atan2(wx,wy)/r-hdg))};
+   pre={dev:q.dev,adf:q.adf0,flag:q.flag,bug:null};let e=Math.abs(norm(T-q.crs));if(e>180)e=360-e;
+   Object.assign(nav,{flag:Math.abs((x=>x>180?x-360:x)(norm(q.crs-(q.opp?q.ic+180:q.ic))))<=90?'TO':'FROM',dev:0,dtk:T,adf:q.opp?(norm(q.ic+180)||360):q.ic,bug:e>90?norm(q.crs+180)||360:null})}}
+ let kk=1;const nvk=()=>{if(!pre||kk>=1)return nav;let da=norm(nav.adf-pre.adf);if(da>180)da-=360;return Object.assign({},nav,{dev:pre.dev+(nav.dev-pre.dev)*kk,adf:norm(pre.adf+da*kk),flag:kk<.5?pre.flag:nav.flag,bug:kk<.5?null:nav.bug})};
+ const draw=h=>drawPFD(h,q.crs,q.fix,q.dis,wind,nvk());lastDraw=draw;
+ cancelAnimationFrame(spinId);
+ if(lastH==null||matchMedia('(prefers-reduced-motion: reduce)').matches){lastH=hdg;draw(hdg);return}
+ const from=lastH;let dd=norm(hdg-from);if(dd>180)dd-=360;lastH=hdg;
+
+ if(!dd&&!pre){draw(hdg);return}
+ const dur=Math.min(900,300+Math.abs(dd)*2.2),t0=performance.now();
+ const step=now=>{const k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,2.2);kk=pre?e:1;if(k>=1)kk=1;
+  draw(k>=1?hdg:norm(from+dd*e));if(k<1)spinId=requestAnimationFrame(step)};
+ spinId=requestAnimationFrame(step)}
+$('#pfd').addEventListener('click',e=>{if(e.target.closest('#icpt')&&q.src=='vor'&&!icpt){icpt=true;render()}});
+function show(){
+ gen();done=false;icpt=false;stopUA();const i=di(q.radial),t=q.turn=='R';
+ const lt=t?'':', left turn';
+ $('#clr').innerHTML=`<div class="en">Sioux52, hold ${DE[i]} of ${q.src=='vor'?`<em>${q.fix}</em> VOR${q.hdist?` at <em>${q.hdist}</em> DME`:''}`:`<em>${q.fix}</em>`} on the <em>${p3(q.ang)}</em> ${q.kind}${lt}, 1 minute leg approved.</div>`;
+ render();
+ document.querySelectorAll('.btns button').forEach(b=>{b.disabled=false;b.className=''});
+ $('#res').classList.remove('show');
+}
+function diagram(){
+ const rr=q.rr,v=[Math.sin(rr*Math.PI/180),-Math.cos(rr*Math.PI/180)],st=[-v[0]*250,-v[1]*250];
+ const race='M0 160L0 0A40 40 0 0 1 80 0L80 160A40 40 0 0 1 0 160';
+ const ent={Direct:'M0 0A40 40 0 0 1 80 0L80 160A40 40 0 0 1 0 160L0 0',Parallel:'M0 0L-15 160A47 47 0 0 0 79 160L0 0',Teardrop:'M0 0L80 138C100 210 0 240 0 150L0 0'}[q.a];
+ const mir=q.turn=='L'?' scale(-1,1)':'',th=q.ic*Math.PI/180,dist=q.src=='vor'&&q.hdist;
+ const vmark=dist?`<g transform="translate(0 ${q.opp?482:0})">`+'<path d="M0-224l8 4.5v9l-8 4.5l-8-4.5v-9z" fill="#0a0f16" stroke="#3f3" stroke-width="2.5"/><circle cx="0" cy="-215" r="2.5" fill="#3f3"/></g>':'';
+ const sg=st[1]<0?-1:1,jy=sg*Math.max(45,Math.min(130,Math.abs(st[1])*.5)),jo=st[1]<0?st[1]*.4:st[1]+40,ipath=q.src=='vor'&&icpt?(q.a=='Direct'?`<path d="M${st[0]} ${st[1]}C${st[0]*.65} ${st[1]*.65} 0 ${jy+sg*60} 0 ${jy}L0 0" fill="none" stroke="#2fd6ff" stroke-width="3.5" stroke-dasharray="2 6" stroke-linecap="round"/>`:`<path d="M${st[0]} ${st[1]}C${st[0]*.6} ${st[1]*.6} 0 ${jo-70} 0 ${jo}L0 150" fill="none" stroke="#2fd6ff" stroke-width="3.5" stroke-dasharray="2 6" stroke-linecap="round"/>`):'';
+ const P=(x,y)=>{if(q.turn=='L')x=-x;return[(x*Math.cos(th)-y*Math.sin(th)).toFixed(1),(x*Math.sin(th)+y*Math.cos(th)).toFixed(1)]};
+ const lab=(t,x,y)=>{{const dx=-st[0],dy=-st[1],L2=dx*dx+dy*dy||1;let u=((x-st[0])*dx+(y-st[1])*dy)/L2;u=Math.max(0,Math.min(1,u));const cx_=st[0]+dx*u,cy_=st[1]+dy*u;let ex=x-cx_,ey=y-cy_,d=Math.hypot(ex,ey);if(d<56){if(d<1){ex=-dy;ey=dx;d=Math.hypot(ex,ey)||1}x=cx_+ex/d*60;y=cy_+ey/d*60;const r=Math.hypot(x,y);if(r>235){x*=235/r;y*=235/r}}}const[a,b]=P(x,y);return `<text x="${a}" y="${b}">${t}</text>`};
+ $('#dia').innerHTML=`<defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ffd400"/></marker></defs>
+ <g transform="rotate(${q.ic})${mir}"><path d="M0 0L0-260A260 260 0 0 1 244 89Z" fill="#4f8fe0" fill-opacity=".22"/><path d="M0 0L244 89A260 260 0 0 1 0 260A260 260 0 0 1-244-89Z" fill="#e8795f" fill-opacity=".2"/><path d="M0 0L-244-89A260 260 0 0 1 0-260Z" fill="#e8d34f" fill-opacity=".2"/><line x1="-244" y1="-89" x2="244" y2="89" stroke="#8a95a8" stroke-dasharray="6 6"/><line x1="0" y1="-280" x2="0" y2="280" stroke="#334" stroke-dasharray="2 6"/>
+ <path d="${race}" fill="none" stroke="#8a95a8" stroke-width="3" stroke-dasharray="7 5"/>
+ <line x1="${st[0]}" y1="${st[1]}" x2="0" y2="0" stroke="#ffd400" stroke-width="4" marker-end="url(#ar)"/>
+ <path d="${ent}" fill="none" stroke="#3ddc84" stroke-width="4" stroke-linejoin="round"/>
+ ${ipath}${vmark}<circle cx="0" cy="0" r="7" fill="#f0f"/><circle cx="${st[0]}" cy="${st[1]}" r="6" fill="#ffd400"/></g>
+ <g fill="#e8edf4" font-size="17" text-anchor="middle" opacity=".9">${lab('Parallel',123,-86)}${lab('Teardrop',-86,-123)}${lab('Direct',-51,141)}</g>
+ <text x="12" y="-12" fill="#f0f" font-size="18" stroke="#0a0f16" stroke-width="4" paint-order="stroke">${dist?q.hdist+'NM':q.fix}</text>${dist?`<text x="${P(14,q.opp?270:-212)[0]}" y="${P(14,q.opp?270:-212)[1]}" fill="#3f3" font-size="16" stroke="#0a0f16" stroke-width="4" paint-order="stroke">${q.fix} VOR</text><text x="-290" y="322" fill="#8b97a8" font-size="14">${tt('VORの位置は縮尺なし(ホールドの基準はDMEフィックス)','VOR position not to scale (hold is referenced to the DME fix)')}</text>`:''}
+ <text x="0" y="-272" fill="#fff" font-size="20" font-weight="700" text-anchor="middle">N</text>
+ <text x="-290" y="-272" fill="#8b97a8" font-size="15">${tt('北が上の図','North up')}</text>
+ ${ipath?`<text x="-290" y="282" fill="#2fd6ff" font-size="15">${tt('水色点線:インターセプトした場合の軌跡(コースに乗って局/フィックスへ)','Cyan dotted: track if you intercept (join the course toward the station/fix)')}</text>`:''}
+  <text x="-290" y="300" fill="#ffd400" font-size="15">${tt('黄:進入  緑:エントリー  灰:ホールド  点線:70°ライン  色面:進入方向のエリア','Yellow: approach  Green: entry  Gray: hold  Dotted: 70° line  Shaded: entry sector')}</text>`;
+}
+let la=null;
+function scoreTxt(){$('#score').textContent=tt(`正解 ${right} / ${total}`,`Correct ${right} / ${total}`)}
+function explain(){const{ok,set,ix,far,a}=la;
+ $('#verdict').style.color=ok?'var(--ok)':'var(--ng)';
+ $('#verdict').textContent=LANG=='ja'?((ok?`正解！ ${a} entry`:`不正解。正解は ${set.join(' / ')} entry`)+(ix?'(インターセプト後)':'')):((ok?`Correct! ${a} entry`:`Incorrect. The answer is ${set.join(' / ')} entry`)+(ix?' (after intercept)':''));
+ const rng=LANG=='ja'?{Direct:'290°〜110°(0°をまたぐ範囲)',Teardrop:'110°〜180°',Parallel:'180°〜290°'}[q.a]:{Direct:'290°–110° (wraps through 0°)',Teardrop:'110°–180°',Parallel:'180°–290°'}[q.a];
+ $('#why').innerHTML=LANG=='ja'?`ホールドの進入コース ${p3(q.ic)}°(${q.kind=='radial'?(q.opp?`radial ${p3(q.ang)}° と同じ向き。局から遠ざかる向きがインバウンド`:`radial ${p3(q.ang)}° の逆方位`):`bearing ${p3(q.ang)}° はインバウンド方位そのもの`})、HDG ${p3(q.hdg)}°(CRS ${p3(q.crs)}°${q.src=='vor'?' '+q.flag+(q.crs!=q.ang?`。指示の${q.kind} ${p3(q.ang)}°の逆方位にセットして、HDGとCRSの差を90°以内に`:''):''})。トラック ${p3(q.dtk)}° − 進入コース = ${q.rel}°${q.turn=='L'?`(左旋回なので左右反転して ${q.rr}°)`:''}。${rng} の範囲なので、そのまま進めば ${q.a} です。${ix?(far?'インターセプトするとコース線上をインバウンド方向(HDG≒進入コース)に飛ぶので、Direct が正解です。':'インターセプトするとコース線上をアウトバウンド方向(HDG≒進入コースの反方位)に飛ぶので、Teardrop / Parallel のどちらも正解です。'):''}`
+ :`Hold inbound course ${p3(q.ic)}° (${q.kind=='radial'?(q.opp?`radial ${p3(q.ang)}°, same direction: the inbound leg flies away from the station`:`reciprocal of radial ${p3(q.ang)}°`):`bearing ${p3(q.ang)}° is the inbound course itself`}). HDG ${p3(q.hdg)}° (CRS ${p3(q.crs)}°${q.src=='vor'?' '+q.flag+(q.crs!=q.ang?`. CRS is set to the reciprocal of the assigned ${q.kind} ${p3(q.ang)}° so that HDG and CRS differ by 90° or less`:''):''}). Track ${p3(q.dtk)}° − inbound course = ${q.rel}°${q.turn=='L'?` (left turn, mirrored to ${q.rr}°)`:''}. This falls in the ${rng} sector, so ${q.a} is correct.${ix?(far?' After intercepting you fly the course inbound (HDG ≈ inbound course), so Direct is correct.':' After intercepting you fly the course outbound (HDG ≈ reciprocal of the inbound course), so both Teardrop and Parallel are correct.'):''}`}
+const VB0=[0,0,1064,798],VB1=[196,347,600,450];let zoomOn=false,vbNow=VB0.slice(),zId=0;
+function setVB(v){vbNow=v;$('#pfd').setAttribute('viewBox',v.map(x=>x.toFixed(1)).join(' '))}
+function zoomTo(on,instant){zoomOn=on;try{localStorage.setItem('hetZoom',on?'1':'0')}catch(e){}cancelAnimationFrame(zId);const a=vbNow.slice(),b=on?VB1:VB0;zoomLbl();
+ if(instant||matchMedia('(prefers-reduced-motion: reduce)').matches){setVB(b.slice());return}
+ const t0=performance.now(),step=now=>{const k=Math.min(1,(now-t0)/380),e=1-Math.pow(1-k,3);setVB(a.map((x,i)=>x+(b[i]-x)*e));if(k<1)zId=requestAnimationFrame(step)};zId=requestAnimationFrame(step)}
+function zoomLbl(){const z=$('#zoom');z.textContent=zoomOn?tt('全体表示','Full view'):tt('コンパス拡大','Zoom compass');z.setAttribute('aria-pressed',zoomOn)}
+function applyLang(){zoomLbl();$('#nsum').textContent=tt('ⓘ 注釈','ⓘ Notes');$('#nlist').innerHTML=tt('<li>GPS、VORともに、最初の状態ではHoldingの基準となるFixに直行している状態です。</li><li>GPSにおけるRadialはOutboundの方位、BearingはInboundの方位を指します。</li><li>VORではInterceptを押すと、そのRadialにInbound(またはOutbound)の方位でInterceptします。</li>','<li>In both GPS and VOR, the initial state is flying direct to the fix the hold is based on.</li><li>In GPS, a radial refers to the outbound course and a bearing to the inbound course.</li><li>In VOR, pressing Intercept intercepts that radial, on either the inbound or the outbound heading.</li>');document.documentElement.lang=LANG;$('#l1').textContent=tt('指示','Clearance');$('#l2').textContent=tt('ナビ','Nav');$('#g1').setAttribute('aria-label',tt('指示の方位の言い方','Radial or bearing'));$('#g2').setAttribute('aria-label',tt('ナビソース','Nav source'));$('#next').textContent=tt('次の問題','Next question');$('#pfd').setAttribute('aria-label',tt('G1000風PFD。HSIが問題ごとに変わります','G1000-style PFD. The HSI changes with each question'));document.querySelectorAll('.seg button[data-l]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.l==LANG));scoreTxt();if(done&&la){explain();diagram()}}
+function answer(a){
+ if(done)return;done=true;total++;const ix=icpt&&q.src=='vor',far=q.a=='Direct',set=ix?(far?['Direct']:['Teardrop','Parallel']):[q.a],ok=set.includes(a);if(ok)right++;streak=ok?streak+1:0;if(ok&&streak%10==0)setTimeout(()=>celebrate(streak),350);
+ scoreTxt();
+ document.querySelectorAll('.btns button').forEach(b=>{b.disabled=true;if(set.includes(b.dataset.a))b.classList.add('right');else if(b.dataset.a==a)b.classList.add('wrong')});
+ la={ok,set,ix,far,a};explain();
+ diagram();$('#res').classList.add('show');$('#res').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+document.querySelectorAll('.btns button').forEach(b=>b.onclick=()=>answer(b.dataset.a));
+let prevMode=null;
+function syncMode(){const v=navMode=='vor';if(v&&prevMode===null){prevMode=mode;mode='radial'}else if(!v&&prevMode!==null){mode=prevMode;prevMode=null}
+ document.querySelectorAll('.seg button[data-m]').forEach(x=>{x.disabled=v&&x.dataset.m!='radial';x.style.opacity=x.disabled?.4:'';x.setAttribute('aria-pressed',x.dataset.m==mode)})}
+document.querySelectorAll('.seg button[data-m]').forEach(b=>b.onclick=()=>{if(b.disabled)return;mode=b.dataset.m;syncMode();if(!done)show()});
+document.querySelectorAll('.seg button[data-s]').forEach(b=>b.onclick=()=>{navMode=b.dataset.s;document.querySelectorAll('.seg button[data-s]').forEach(x=>x.setAttribute('aria-pressed',x==b));syncMode();if(!done)show()});
+document.querySelectorAll('.seg button[data-l]').forEach(b=>b.onclick=()=>{LANG=b.dataset.l;try{localStorage.setItem('hetLang',LANG)}catch(e){}applyLang()});
+$('#next').onclick=()=>{show();window.scrollTo({top:0,behavior:'smooth'})};
+$('#zoom').onclick=()=>zoomTo(!zoomOn);try{if(localStorage.getItem('hetZoom')=='1')zoomTo(true,true)}catch(e){}
+applyLang();syncMode();show();loadOAT();setInterval(loadOAT,1800000);
+</script>
+</body>
+</html>
